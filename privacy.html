@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — My Money and (AI)</title>
+<meta name="description" content="How My Money and (AI) handles SMS, Gmail and Google Drive data.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="./">My Money and (AI)</a>
+  <nav><a href="./">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
+</header>
+<main>
+<h1 id="privacy-policy-my-money-and-ai">Privacy Policy — My Money and (AI)</h1>
+<p><em>Last updated: 2026-10-22</em></p>
+<p><strong>App:</strong> My Money and (AI)
+<strong>Developer contact / privacy point of contact:</strong> info.ai.mymoney@gmail.com</p>
+<p>My Money and (AI) ("the app", "we", "us") is a personal-finance app that reads the <strong>transactional</strong> SMS already on your phone — and, only if you choose to link it, the bank alert emails in your Gmail — and turns them into a private spending dashboard. This document explains, in plain language, exactly what data the app accesses, where it lives, how long it is kept, how to delete it, and what (if anything) leaves your device.</p>
+<p>The short version:</p>
+<blockquote>
+<p><strong>Your data stays on your phone.</strong> The app has no server and no "My Money cloud." Nothing leaves the device unless <em>you</em> turn it on — sharing a backup file, backing up to your own Google Drive, or asking the optional AI assistant a question (and even then we send only aggregated, anonymised figures over HTTPS). If you link Gmail, alert emails are downloaded from Google <strong>to your phone</strong> and processed there; they are never sent to us or anyone else.</p>
+</blockquote>
+<hr />
+<h2 id="1-what-data-the-app-reads">1. What data the app reads</h2>
+<h3 id="11-sms-messages-personal-sensitive-data">1.1 SMS messages (personal &amp; sensitive data)</h3>
+<p>The app needs the <code>READ_SMS</code> permission to do its core job: turn bank, UPI, credit-card, and mutual-fund SMS into a clean transaction list. It reads the inbox on demand and via a periodic background scan; it does <strong>not</strong> listen for incoming-SMS broadcasts (it does not request <code>RECEIVE_SMS</code>).</p>
+<p>It reads <strong>only messages that look transactional</strong>. Each SMS is parsed locally on your phone with a deterministic rules engine — there is no cloud parser. A message is kept only if it contains:</p>
+<ul>
+<li>a debit, credit, or transfer <strong>amount</strong> (₹), AND</li>
+<li>an action verb a bank/UPI/AMC would use (<code>debited</code>, <code>credited</code>, <code>spent</code>, <code>received</code>, <code>purchased</code>, <code>NAV</code>, <code>EMI</code>, <code>IMPS</code>, <code>UPI</code>, <code>NEFT</code>, etc.).</li>
+</ul>
+<p>The following kinds of SMS are <strong>dropped at parse time</strong> and never written to the database, sent to the LLM, or included in backups:</p>
+<ul>
+<li>OTPs and one-time verification codes</li>
+<li>Balance-update pings without an action</li>
+<li>Promotional / marketing offers</li>
+<li>Personal messages from individuals</li>
+<li>Anything without a recognisable rupee amount</li>
+</ul>
+<p>There is no upload of your inbox, ever. Your full SMS history stays in Android's SMS provider exactly where it was. The app never sends, writes, modifies, or deletes any SMS.</p>
+<h3 id="12-background-access-important-disclosure">1.2 Background access (important disclosure)</h3>
+<p>So that new transactions appear without you opening the app, My Money and (AI) also scans for transactional SMS <strong>in the background</strong> — on a periodic schedule and after device restart (this is why the app requests <code>RECEIVE_BOOT_COMPLETED</code> and runs a scheduled background task). This background processing does the <strong>same</strong> local, on-device parsing described in 1.1: it reads only transactional messages, writes only the derived transaction rows to the local database, and <strong>transmits nothing</strong>. You are asked to grant SMS access through an in-app disclosure before any access begins, and you can revoke the permission at any time in Android Settings — background scanning then stops.</p>
+<h3 id="13-gmail-alert-emails-optional-off-by-default">1.3 Gmail alert emails (optional, off by default)</h3>
+<p>Some bank alerts never arrive as SMS. If you choose <strong>Settings → Linked email → Link</strong>, the app asks Google for <strong>read-only</strong> access to your Gmail (the <code>gmail.readonly</code> permission) so it can fill those gaps. Before Google's consent screen appears, the app explains what it will read.</p>
+<ul>
+<li><strong>What is read:</strong> the app asks Gmail to search only for emails <strong>from Indian banks, card issuers, payment apps, EPFO and NPS</strong> that contain transaction wording (debited, credited, spent, UPI, NEFT …), within your chosen scan window (at most one year). No other email is downloaded.</li>
+<li><strong>How it is processed:</strong> each matching email is downloaded <strong>to your phone</strong>, the short transaction sentence is extracted, and it goes through the same on-device rules engine as SMS. Only the derived transaction row and that short extract are stored in the local database. The rest of the email is discarded.</li>
+<li><strong>SMS comes first:</strong> if an SMS already recorded the same transaction (same reference number, or same amount and time), the email is ignored.</li>
+<li><strong>What is never done:</strong> the app never sends, modifies, deletes, labels or archives any email; never reads emails from other senders; and never uploads email content to us or any third party. Gmail access happens only while the app is open (manual or in-app scans), never in the background.</li>
+<li><strong>Turning it off:</strong> <strong>Settings → Linked email → Unlink</strong> removes every transaction imported from email. To fully revoke Google's permission, remove My Money at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+</ul>
+<h3 id="14-what-we-dont-read">1.4 What we <em>don't</em> read</h3>
+<ul>
+<li>Contacts, call logs, calendar, photos, location, microphone, camera — none of these are requested.</li>
+<li>Notifications from other apps — never read.</li>
+<li>Browsing history — never read.</li>
+<li>Persistent device identifiers (IMEI, IMSI, SIM serial, MAC, etc.) — never read or collected.</li>
+</ul>
+<hr />
+<h2 id="2-where-your-data-lives">2. Where your data lives</h2>
+<h3 id="21-local-sqlite-database">2.1 Local SQLite database</h3>
+<p>Every transaction the app derives from SMS is written to a single SQLite file (<code>my_money.db</code>) inside the app's private storage directory on your phone. Other apps on the device cannot read it (Android sandboxing). The database holds:</p>
+<ul>
+<li>Parsed transaction rows (date, amount, direction, parsed category, parsed merchant name, your manual labels)</li>
+<li>A link back to the source SMS id (so reloads stay consistent)</li>
+<li>Your goals, reminders, custom categories, and per-message overrides</li>
+</ul>
+<p>Nothing in this database is uploaded to a remote server. There is no "My Money cloud."</p>
+<h3 id="22-backups">2.2 Backups</h3>
+<p>You can choose to save a backup file (<code>.mmbak</code>) from <strong>Settings → Backup to a file</strong>. The backup is created in your phone's temp directory, then handed to the Android share sheet so <em>you</em> pick where it goes — Google Drive, Gmail, a USB cable transfer to your PC, anywhere.</p>
+<ul>
+<li><strong>Encrypted backups (recommended)</strong>: You set a passphrase. The file is encrypted with <strong>AES-256-GCM</strong>, with the key derived from your passphrase via <strong>PBKDF2-HMAC-SHA256 (200 000 iterations + per-file salt)</strong>. We do not store, log, or transmit the passphrase. If you forget it, the file cannot be recovered — by us, by anyone.</li>
+<li><strong>Plain backups (optional)</strong>: The file is a copy of the SQLite DB. Encrypted format is strongly recommended; the plain option exists for convenience when restoring locally.</li>
+</ul>
+<p>Where the backup ultimately lives (your Drive, your email, your PC) is governed by <em>that</em> service's privacy policy, not ours.</p>
+<p><strong>Google Drive backup (optional):</strong> if you sign in with Google under <strong>Settings → Backup</strong>, the app can upload a backup to a <strong>hidden app-specific folder in your own Google Drive</strong> (the <code>drive.appdata</code> permission). The app can see only that folder — never your other Drive files — and the backup goes from your phone straight to your Drive; we never receive it.</p>
+<hr />
+<h2 id="3-ai-assistant-optional">3. AI Assistant (optional)</h2>
+<p>The AI Assistant is <strong>off by default</strong>. To enable it you paste your own API key from a provider you choose (Anthropic, OpenAI, etc.) in <strong>Settings → AI Assistant</strong>. We do not run an AI service of our own; your key calls your provider directly over <strong>HTTPS</strong>.</p>
+<h3 id="31-what-is-sent-to-the-llm">3.1 What is sent to the LLM</h3>
+<p>When you ask the assistant a question, a prompt is built locally on your phone and sent to your chosen provider. The prompt contains <strong>only aggregated, anonymised figures</strong>:</p>
+<ul>
+<li>Total spend, income, net, savings rate for the active window</li>
+<li>Spend totals <strong>per category name</strong> (e.g. "Food &amp; Dining: ₹4,200")</li>
+<li>Spend totals <strong>per month</strong> (e.g. "2026-04: ₹38,000")</li>
+<li>Spend totals <strong>per manual label name</strong> (only labels <em>you typed</em>)</li>
+<li>Counts of bills, reminders, goal progress percentages, anonymised goal tags ("Goal A", "Goal B")</li>
+</ul>
+<p>That's it. You can audit the exact prompt yourself, any time, from the AI Assistant screen — tap the shield icon (top right) to open <strong>"What data is sent to your LLM"</strong>. The prompt shown there is the prompt that will actually be sent.</p>
+<h3 id="32-what-is-never-sent-to-the-llm">3.2 What is NEVER sent to the LLM</h3>
+<ul>
+<li><strong>SMS or email body text</strong> — not a single character.</li>
+<li><strong>SMS sender ID</strong> (e.g. <code>AX-AXISBK-S</code>).</li>
+<li><strong>Receiver / merchant name</strong> (e.g. "Swiggy", "Mr. Patel"), in any field.</li>
+<li><strong>Transaction ids</strong>.</li>
+<li><strong>Account or card numbers</strong>, masked or unmasked.</li>
+<li><strong>PRAN, EPFO, or any government identifier</strong>.</li>
+<li><strong>Goal titles or reminder titles</strong> (sent as anonymised tags only).</li>
+<li><strong>Your name, email address, or phone number.</strong></li>
+</ul>
+<h3 id="33-what-your-llm-provider-sees">3.3 What your LLM provider sees</h3>
+<p>Whatever you send via your API key is governed by your provider's privacy and retention terms. We have no relationship with that provider; the request goes from your phone to them, not via us. Treat the aggregated prompt above as if it were posted on a piece of paper to your provider's office — that is roughly the level of detail involved.</p>
+<hr />
+<h2 id="4-permissions-explained">4. Permissions explained</h2>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>Why the app asks for it</th>
+<th>Optional?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>READ_SMS</code></td>
+<td>Read transactional SMS from the inbox to build the dashboard (on demand and via a periodic background scan).</td>
+<td>No — without it the app cannot do its core job. You can revoke any time; existing data stays on your phone.</td>
+</tr>
+<tr>
+<td><code>RECEIVE_BOOT_COMPLETED</code>, <code>WAKE_LOCK</code></td>
+<td>Re-arm the periodic background transaction scan after a restart.</td>
+<td>Functional; tied to background scanning.</td>
+</tr>
+<tr>
+<td><code>SCHEDULE_EXACT_ALARM</code></td>
+<td>Deliver bill/reminder notifications on time.</td>
+<td>Yes — disable notifications to stop.</td>
+</tr>
+<tr>
+<td><code>POST_NOTIFICATIONS</code></td>
+<td>Show transaction and reminder notifications (Android 13+).</td>
+<td>Yes — can be disabled in Settings → Notifications.</td>
+</tr>
+<tr>
+<td>Storage (file picker)</td>
+<td>Share / restore the <code>.mmbak</code> backup file.</td>
+<td>Only used when you tap Export / Restore.</td>
+</tr>
+<tr>
+<td><code>USE_BIOMETRIC</code>, <code>USE_FINGERPRINT</code></td>
+<td>Optional app/database unlock.</td>
+<td>Yes.</td>
+</tr>
+<tr>
+<td><code>INTERNET</code>, <code>ACCESS_NETWORK_STATE</code></td>
+<td>Only used for features you turn on: the AI assistant, a linked Gmail account, or Google Drive backup. Otherwise the app makes zero network requests.</td>
+<td>Yes — the app runs fully offline with these off.</td>
+</tr>
+<tr>
+<td>Google account: <code>gmail.readonly</code></td>
+<td>Read bank / card / UPI / EPFO / NPS alert emails to add transactions your SMS missed (section 1.3). Granted on Google's consent screen.</td>
+<td>Yes — off until you tap Link; revoke any time.</td>
+</tr>
+<tr>
+<td>Google account: <code>drive.appdata</code></td>
+<td>Store your backup in a hidden app folder in your own Drive (section 2.2).</td>
+<td>Yes — only if you sign in for Drive backup.</td>
+</tr>
+</tbody>
+</table>
+<p>We use Android <strong>runtime permission requests</strong>, preceded by an in-app disclosure, before accessing SMS data.</p>
+<hr />
+<h2 id="5-data-security">5. Data security</h2>
+<ul>
+<li>SMS parsing and all transaction storage happen <strong>on-device</strong>; the transaction database sits in the app's private, sandboxed storage and is not readable by other apps.</li>
+<li>Optional backups can be <strong>encrypted</strong> with AES-256-GCM (key derived via PBKDF2-HMAC-SHA256, 200 000 iterations, per-file salt).</li>
+<li>The only outbound network call (optional AI assistant) uses <strong>HTTPS / modern TLS</strong>.</li>
+<li>We do not transmit your SMS, account numbers, or government identifiers off the device under any circumstances.</li>
+</ul>
+<hr />
+<h2 id="6-data-retention-and-deletion">6. Data retention and deletion</h2>
+<ul>
+<li><strong>Retention:</strong> Transaction data derived from SMS is retained locally on your device only, for as long as the app is installed, so your dashboard and history remain available offline. We hold <strong>no copy</strong> on any server, because there is no server.</li>
+<li><strong>Delete within the app:</strong> You can wipe data at any time from <strong>Settings</strong> — "Delete all transactions" / "Clear all transaction data" / "Reload messages from SMS" — which remove the derived rows and cache from the local database.</li>
+<li><strong>Delete by uninstalling:</strong> Uninstalling the app removes the entire local database (<code>my_money.db</code>) and all app data from your device.</li>
+<li><strong>Backups you exported</strong> (<code>.mmbak</code>) live wherever <em>you</em> saved them (Drive, Gmail, PC) and are under your sole control; delete them in that location.</li>
+<li><strong>Email-derived data:</strong> <strong>Settings → Linked email → Unlink</strong> deletes every transaction imported from Gmail. Revoke the Google permission itself at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>; a Drive backup can be removed from Google Drive → Settings → Manage apps.</li>
+<li>Because no personal or sensitive data ever reaches us, a "delete my data" request has nothing for us to delete server-side. You can still contact us at the email below with any question.</li>
+</ul>
+<hr />
+<h2 id="7-accounts">7. Accounts</h2>
+<p>My Money and (AI) does <strong>not</strong> require any user account or registration, and we keep no username, password, or profile — so there is no My Money account to delete. All data is local to your device.</p>
+<p>The only sign-in is <strong>optional "Sign in with Google"</strong>, used solely for the Gmail and Drive features above. Google handles the sign-in; the app never sees your Google password, and your Google account details are not sent to us.</p>
+<hr />
+<h2 id="8-no-tracking-no-ads-no-analytics-no-third-party-sdks">8. No tracking, no ads, no analytics, no third-party SDKs</h2>
+<ul>
+<li>The app does not include any third-party analytics SDK (Firebase Analytics, Crashlytics, AppsFlyer, Mixpanel, Sentry, etc.).</li>
+<li>No advertising SDK is integrated and <strong>no ads are served</strong>; the app does not collect or use the Android Advertising ID (AAID) or the App Set ID.</li>
+<li>There is no crash-reporting service that uploads stack traces.</li>
+<li>We do not measure how often you open the app, which screens you visit, or what you tap.</li>
+</ul>
+<p>If no AI key is configured, Gmail is not linked, and Drive backup is off, the app makes <strong>zero outbound network requests</strong>.</p>
+<hr />
+<h2 id="8a-google-user-data-limited-use">8A. Google user data — Limited Use</h2>
+<p>My Money and (AI)'s use and transfer of information received from Google APIs to any other app will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Specifically:</p>
+<ul>
+<li>Gmail and Drive data is used <strong>only</strong> to provide the features you see in the app (adding transactions from bank alert emails; storing your backup).</li>
+<li>It is <strong>not</strong> transferred to anyone, except as needed to provide those features with your consent, for security, or to comply with law.</li>
+<li>It is <strong>not</strong> used for advertising, and is <strong>not</strong> sold.</li>
+<li><strong>No human reads it</strong> — not us, not anyone — unless you explicitly ask us to look at a specific message to help you, or it is required for security or by law.</li>
+<li>It is processed on your device; it is never sent to the optional AI assistant or to any AI model.</li>
+</ul>
+<hr />
+<h2 id="9-financial-and-sensitive-data">9. Financial and sensitive data</h2>
+<p>Financial information derived from your SMS is treated as sensitive. It is never publicly disclosed, never sold, and never shared with third parties for advertising or any other purpose. We do <strong>not sell</strong> personal or sensitive user data — there is no exchange or transfer of such data to any third party for monetary or other consideration.</p>
+<hr />
+<h2 id="10-international-users-and-your-rights">10. International users and your rights</h2>
+<p>The app processes data <strong>locally on your device</strong> and we operate no server that receives your personal data, so we are not a data controller of any centrally-held personal data. Where applicable laws (such as the EU/UK GDPR or India's data-protection law) grant you rights over your personal data — including access, correction, and deletion — you can exercise them directly on the device (the data is in your hands), and you may contact us at the email below with any question. We comply with applicable privacy and data-protection laws in the jurisdictions where the app is offered.</p>
+<hr />
+<h2 id="11-children">11. Children</h2>
+<p>The app is not directed at children under 13. We do not knowingly collect data from anyone — but in particular not from children.</p>
+<hr />
+<h2 id="12-changes-to-this-policy">12. Changes to this policy</h2>
+<p>If we change anything material — for example, if a future version of the app introduces a new permission, a new outbound network call, an advertising or analytics SDK, or a new type of stored data — this document will be updated and the "Last updated" date at the top will change. You'll see the new policy on the next app update.</p>
+<hr />
+<h2 id="13-contact">13. Contact</h2>
+<p>Questions, concerns, or a data-deletion request?</p>
+<p><strong>info.ai.mymoney@gmail.com</strong></p>
+<p>You can also raise an issue or feedback on our public tracker: https://github.com/infoaimymoney-lgtm/mymoney-support/issues</p>
+<p>A data-deletion request is straightforward: there's nothing on a server for us to delete. Uninstalling the app removes the local database. Any <code>.mmbak</code> backup files you exported live wherever <em>you</em> saved them (Drive, Gmail, PC) and are under your control.</p>
+<hr />
+<p><em>My Money and (AI) is built and maintained as a personal-finance tool. It does not exist to monetise your data. The privacy guarantees above aren't legal fine print — they are how the app actually works, and you can audit it: tap <strong>AI Assistant → shield icon</strong> to see exactly what the LLM gets.</em></p>
+</main>
+<footer>
+  <p>My Money and (AI) · <a href="mailto:info.ai.mymoney@gmail.com">info.ai.mymoney@gmail.com</a> ·
+  <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a></p>
+</footer>
+</body>
+</html>
